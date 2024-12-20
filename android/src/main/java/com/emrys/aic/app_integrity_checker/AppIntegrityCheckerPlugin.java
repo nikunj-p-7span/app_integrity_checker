@@ -72,25 +72,31 @@ public class AppIntegrityCheckerPlugin implements FlutterPlugin, MethodCallHandl
   }
 
 
-  private String getChecksum(){
+  private String getChecksum() {
+    StringBuilder combinedChecksum = new StringBuilder();
 
-    String crc = "";
+    try (ZipFile zf = new ZipFile(context.getPackageCodePath())) {
+      // List of files to include in checksum validation
+      List<String> filesToCheck = Arrays.asList(
+              "classes.dex",
+              "AndroidManifest.xml",
+              "res/layout/activity_main.xml" // Add any specific XML files to validate
+      );
 
-    ZipFile zf = null;
-    try {
-      zf = new ZipFile(context.getPackageCodePath());
-      ZipEntry ze = zf.getEntry("classes.dex");
-
-      crc = String.valueOf(ze.getCrc());
-
+      for (String fileName : filesToCheck) {
+        ZipEntry ze = zf.getEntry(fileName);
+        if (ze != null) {
+          MessageDigest md = MessageDigest.getInstance("SHA-256");
+          md.update(zf.getInputStream(ze).readAllBytes());
+          combinedChecksum.append(Base64.encodeToString(md.digest(), Base64.DEFAULT));
+        }
+      }
     } catch (Exception e) {
       e.printStackTrace();
-      crc =  "checksumFailed";
+      return "checksumFailed";
     }
 
-
-    return crc;
-
+    return combinedChecksum.toString();
   }
 
   private String getSignature() {
