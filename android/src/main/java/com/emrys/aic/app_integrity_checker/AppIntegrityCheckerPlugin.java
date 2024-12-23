@@ -71,7 +71,6 @@ public class AppIntegrityCheckerPlugin implements FlutterPlugin, MethodCallHandl
     channel.setMethodCallHandler(null);
   }
 
-
   private String getChecksum() {
     StringBuilder combinedChecksum = new StringBuilder();
 
@@ -87,8 +86,19 @@ public class AppIntegrityCheckerPlugin implements FlutterPlugin, MethodCallHandl
         ZipEntry ze = zf.getEntry(fileName);
         if (ze != null) {
           MessageDigest md = MessageDigest.getInstance("SHA-256");
-          md.update(zf.getInputStream(ze).readAllBytes());
-          combinedChecksum.append(Base64.encodeToString(md.digest(), Base64.DEFAULT));
+
+          try (InputStream is = zf.getInputStream(ze);
+               ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+
+            byte[] data = new byte[1024];
+            int nRead;
+            while ((nRead = is.read(data, 0, data.length)) != -1) {
+              buffer.write(data, 0, nRead);
+            }
+
+            md.update(buffer.toByteArray());
+            combinedChecksum.append(Base64.encodeToString(md.digest(), Base64.DEFAULT));
+          }
         }
       }
     } catch (Exception e) {
@@ -98,6 +108,7 @@ public class AppIntegrityCheckerPlugin implements FlutterPlugin, MethodCallHandl
 
     return combinedChecksum.toString();
   }
+
 
   private String getSignature() {
     StringBuilder currentSignature;
