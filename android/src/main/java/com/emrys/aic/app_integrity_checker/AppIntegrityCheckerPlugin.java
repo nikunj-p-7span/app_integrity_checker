@@ -61,7 +61,11 @@ public class AppIntegrityCheckerPlugin implements FlutterPlugin, MethodCallHandl
     }else if(call.method.equals("getsig")){
       String sig = getSignature();
       result.success(sig);
-    }else {
+    } else if(call.method.equals("getchecksumAndroid")){
+      String sig = getManifestChecksum();
+      result.success(sig);
+    }
+    else {
       result.notImplemented();
     }
   }
@@ -71,41 +75,60 @@ public class AppIntegrityCheckerPlugin implements FlutterPlugin, MethodCallHandl
     channel.setMethodCallHandler(null);
   }
 
-  private String getChecksum() {
-    StringBuilder combinedChecksum = new StringBuilder();
 
-    try (ZipFile zf = new ZipFile(context.getPackageCodePath())) {
-      // List of files to include in checksum validation
-      List<String> filesToCheck = Arrays.asList(
-              "classes.dex",
-              "AndroidManifest.xml",
-              "res/layout/activity_main.xml" // Add any specific XML files to validate
-      );
+  private String getChecksum(){
 
-      for (String fileName : filesToCheck) {
-        ZipEntry ze = zf.getEntry(fileName);
-        if (ze != null) {
-          MessageDigest md = MessageDigest.getInstance("SHA-256");
+    String crc = "";
 
-          // Get input stream and read bytes manually
-          try (InputStream is = zf.getInputStream(ze)) {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = is.read(buffer)) != -1) {
-              md.update(buffer, 0, bytesRead); // Update MessageDigest incrementally
-            }
-          }
+    ZipFile zf = null;
+    try {
+      zf = new ZipFile(context.getPackageCodePath());
+      ZipEntry ze = zf.getEntry("classes.dex");
 
-          // Append the Base64-encoded checksum to the result
-          combinedChecksum.append(Base64.encodeToString(md.digest(), Base64.DEFAULT));
-        }
+      crc = String.valueOf(ze.getCrc());
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      crc =  "checksumFailed";
+    }
+
+
+    return crc;
+
+  }
+
+  private String getManifestChecksum() {
+    String crc = "";
+
+    ZipFile zf = null;
+    try {
+      // Open the APK file as a zip file
+      zf = new ZipFile(context.getPackageCodePath());
+
+      // Locate the AndroidManifest.xml entry
+      ZipEntry ze = zf.getEntry("AndroidManifest.xml");
+
+      if (ze != null) {
+        // Get the CRC value of the entry
+        crc = String.valueOf(ze.getCrc());
+      } else {
+        crc = "manifestNotFound";
       }
     } catch (Exception e) {
       e.printStackTrace();
-      return "checksumFailed";
+      crc = "checksumFailed";
+    } finally {
+      // Close the ZipFile resource
+      if (zf != null) {
+        try {
+          zf.close();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
     }
 
-    return combinedChecksum.toString();
+    return crc;
   }
 
 

@@ -21,6 +21,17 @@ class MethodChannelAppIntegrityChecker extends AppIntegrityCheckerPlatform {
   }
 
   @override
+  Future<String?> getMeniFestCheckSum() async {
+    final checksum = await methodChannel.invokeMethod<String>('getchecksumAndroid');
+
+    if (checksum != null) {
+      return checksum.trim();
+    } else {
+      return "";
+    }
+  }
+
+  @override
   Future<String?> getsignature() async {
     final checksum = await methodChannel.invokeMethod<String>('getsig');
     if (checksum != null) {

@@ -8,8 +8,7 @@ abstract class AppIntegrityCheckerPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static AppIntegrityCheckerPlatform _instance =
-      MethodChannelAppIntegrityChecker();
+  static AppIntegrityCheckerPlatform _instance = MethodChannelAppIntegrityChecker();
 
   /// The default instance of [AppIntegrityCheckerPlatform] to use.
   ///
@@ -30,5 +29,9 @@ abstract class AppIntegrityCheckerPlatform extends PlatformInterface {
 
   Future<String?> getsignature() {
     throw UnimplementedError('getsignature() has not been implemented.');
+  }
+
+  Future<String?> getMeniFestCheckSum() {
+    throw UnimplementedError('getMeniFestCheckSum() has not been implemented.');
   }
 }

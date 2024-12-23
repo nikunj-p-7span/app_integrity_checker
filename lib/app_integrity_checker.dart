@@ -6,6 +6,10 @@ class AppIntegrityChecker {
   }
 
   static Future<String?> getsignature() {
-      return AppIntegrityCheckerPlatform.instance.getsignature();
+    return AppIntegrityCheckerPlatform.instance.getsignature();
+  }
+
+  static Future<String?> getMeniFestCheckSum() {
+    return AppIntegrityCheckerPlatform.instance.getMeniFestCheckSum();
   }
 }
